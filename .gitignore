@@ -37,3 +37,6 @@ Thumbs.db
 .idea/
 *.sublime-workspace
 *.sublime-project
+
+# Ignore package-lock.json
+package-lock.json
