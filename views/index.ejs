@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify App</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+
+<body>
+  <h1>Welcome to the Spotify App</h1>
+
+  <!-- Login Button for Spotify OAuth -->
+  <% if (!user) { %>
+    <button id="loginButton" onclick="window.location.href='/login'">Log in with Spotify</button>
+  <% } %>
+
+  <div class="response-area">
+    <!-- Display the user's profile and playlists if authenticated -->
+    <% if (user) { %>
+      <div class="user-info">
+        <img src="<%= user.images[0]?.url %>" alt="User Profile Picture" width="100">
+        <h2><%= user.display_name %></h2>
+        <p><%= user.email %></p>
+      </div>
+
+      <div class="playlists">
+        <h3>Your Playlists</h3>
+        <div class="playlist-cards">
+          <% if (playlists && playlists.items && playlists.items.length > 0) { %>
+            <% playlists.items.forEach(function(playlist) { %>
+              <a href="https://open.spotify.com/playlist/<%= playlist.id %>" target="_blank" class="playlist-card">
+                <img src="<%= playlist.images[0]?.url %>" alt="<%= playlist.name %>" class="playlist-image">
+                <div class="playlist-info">
+                  <p class="playlist-name"><%= playlist.name %></p>
+                  <p class="playlist-owner">By: <%= playlist.owner.display_name %></p>
+                </div>
+              </a>
+            <% }); %>
+          <% } else { %>
+            <p>No playlists found.</p>
+          <% } %>
+        </div>
+      </div>
+    <% } else { %>
+      <p>Please log in to see your profile and playlists.</p>
+    <% } %>
+  </div>
+</body>
+
+</html>
