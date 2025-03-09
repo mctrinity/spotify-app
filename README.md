@@ -131,6 +131,69 @@ Thumbs.db
 *.sublime-project
 ```
 
+## Using **nodemon** for Automatic Server Restarts
+
+To use **nodemon** for automatically restarting your server during development, follow the steps below:
+
+### 1. Install nodemon
+
+If you haven't installed **nodemon**, you can do so globally or locally.
+
+- To install globally (so you can use nodemon in any project):
+
+```bash
+npm install -g nodemon
+```
+
+- To install **locally** (recommended for specific projects):
+
+```bash
+npm install --save-dev nodemon
+```
+
+### 2. Use nodemon to Start Your Server
+
+Once **nodemon** is installed, use the following command to start your server with automatic restarts:
+
+```bash
+npx nodemon index.js
+```
+
+Or, if you installed it globally:
+
+```bash
+nodemon index.js
+```
+
+### 3. Add a Start Script for Easy Execution
+
+You can add **nodemon** to your `package.json` to simplify running it:
+
+```json
+"scripts": {
+  "start": "nodemon index.js"
+}
+```
+
+Then, you can run the app with:
+
+```bash
+npm start
+```
+
+### 4. Customizing nodemon
+
+You can also create a `nodemon.json` file to customize **nodemon's** behavior, such as specifying which files to watch and which extensions to trigger restarts.
+
+```json
+{
+  "watch": ["index.js", "routes"],
+  "ext": "js,json"
+}
+```
+
+This will make **nodemon** watch only specific files and extensions for changes.
+
 ## Conclusion
 
 This application allows you to authenticate with Spotify, fetch user data (like playlists and top tracks), and integrate the Spotify Web API into your Node.js applications. Make sure to securely store your **Client ID** and **Client Secret** and never expose them in public repositories.
