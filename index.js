@@ -11,6 +11,9 @@ dotenv.config();
 const app = express();
 const port = 3000;
 
+app.use(express.urlencoded({ extended: true })); // Middleware to parse form data
+
+
 // Spotify API credentials from .env
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -29,21 +32,55 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Set up session middleware to store access token and user data
 app.use(session({
-  secret: 'your_secret_key', // Replace with a stronger secret key
+  secret: process.env.SESSION_SECRET, // Load from .env
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false, 
+  cookie: { secure: false } // Set to true if using HTTPS
 }));
 
+
 // Basic route to render the page
-app.get("/", (req, res) => {
-  // Ensure `user` data is available to pass to the EJS template
-  const user = req.session.user; // Retrieve user data from session
-  res.render("index.ejs", { user: user, content: "Welcome to Spotify API Integration!" });
+app.get("/", async (req, res) => {
+  const user = req.session.user; 
+  const accessToken = req.session.access_token;
+
+  if (!user || !accessToken) {
+    return res.render("index.ejs", { user: null, playlists: null, content: "Welcome to Spotify API Integration!" });
+  }
+
+  try {
+    // Fetch updated playlists to ensure `playlists` is always defined
+    const playlistsResponse = await axios.get("https://api.spotify.com/v1/me/playlists", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    req.session.playlists = playlistsResponse.data; // Store in session
+
+    res.render("index.ejs", {
+      user: user,
+      playlists: playlistsResponse.data, // Pass playlists data
+      content: "Welcome to Spotify API Integration!",
+    });
+  } catch (error) {
+    console.error("Error fetching playlists:", error.response?.data || error.message);
+    res.render("index.ejs", { user: user, playlists: null, content: "Error loading playlists." });
+  }
 });
+
 
 // Step 1: Redirect user to Spotify's authorization page
 app.get("/login", (req, res) => {
-  const spotifyAuthUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=user-library-read user-top-read`;
+  const scopes = [
+    "user-read-private",
+    "user-read-email",
+    "playlist-read-private",
+    "playlist-read-collaborative",
+    "playlist-modify-public",
+    "playlist-modify-private"
+  ].join("%20"); // Space-separated scopes
+  
+  const spotifyAuthUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scopes}`;
+  
   res.redirect(spotifyAuthUrl);
 });
 
@@ -108,26 +145,43 @@ app.get("/callback", async (req, res) => {
   }
 });
 
+app.get('/add-playlist', (req, res) => {
+  if (!req.session.access_token) return res.redirect('/login');
+  res.render('add-playlist.ejs');
+});
 
+// Create Playlist
+app.post("/create-playlist", async (req, res) => {
+  const accessToken = req.session.access_token;
 
-// Example of using the access token to fetch a user's top tracks
-app.get("/top-tracks", async (req, res) => {
-  const { access_token } = req.session; // Retrieve access token from session
-
-  if (!access_token) {
-    return res.redirect("/login"); // Redirect to login if not authenticated
+  if (!accessToken) {
+    console.error("🚨 No access token found!");
+    return res.status(401).json({ error: "Unauthorized - No access token found" });
   }
 
   try {
-    const topTracks = await axios.get("https://api.spotify.com/v1/me/top/artists", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
+    const { name, description, isPublic } = req.body;
+
+    // Step 1: Create the playlist
+    const response = await axios.post(
+      "https://api.spotify.com/v1/me/playlists",
+      { name, description: description || "", public: isPublic === "true" },
+      { headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" } }
+    );
+
+    console.log("✅ Playlist Created:", response.data);
+
+    // Step 2: Fetch updated playlists after creation
+    const updatedPlaylistsResponse = await axios.get("https://api.spotify.com/v1/me/playlists", {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    res.json(topTracks.data);
+
+    req.session.playlists = updatedPlaylistsResponse.data; // Store new playlists in session
+
+    res.redirect("/");
   } catch (error) {
-    console.error("Error fetching top tracks", error);
-    res.status(500).send("Failed to fetch top tracks");
+    console.error("🚨 Error creating playlist:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to create playlist", details: error.response?.data });
   }
 });
 

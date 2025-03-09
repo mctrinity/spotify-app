@@ -1,0 +1,13 @@
+<h1>Create a New Playlist</h1>
+<form action="/create-playlist" method="POST">
+  <input type="text" name="name" placeholder="Playlist Name" required>
+  <textarea name="description" placeholder="Playlist Description"></textarea>
+  
+  <!-- NEW: Add an optional input field for an image URL -->
+  <input type="text" name="imageUrl" placeholder="Playlist Image URL (optional)">
+  
+  <label>
+    <input type="checkbox" name="isPublic" value="true"> Public
+  </label>
+  <button type="submit">Create Playlist</button>
+</form>

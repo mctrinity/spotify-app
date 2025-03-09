@@ -27,11 +27,16 @@
 
       <div class="playlists">
         <h3>Your Playlists</h3>
+        <button onclick="window.location.href='/add-playlist'" class="btn-add">➕ Add Playlist</button>
         <div class="playlist-cards">
           <% if (playlists && playlists.items && playlists.items.length > 0) { %>
             <% playlists.items.forEach(function(playlist) { %>
               <a href="https://open.spotify.com/playlist/<%= playlist.id %>" target="_blank" class="playlist-card">
-                <img src="<%= playlist.images[0]?.url %>" alt="<%= playlist.name %>" class="playlist-image">
+                <% if (playlist.images && playlist.images.length > 0) { %>
+                  <img src="<%= playlist.images[0].url %>" alt="<%= playlist.name %>" class="playlist-image">
+                <% } else { %>
+                  <img src="/default-image.jpg" alt="Default Playlist Image" class="playlist-image">
+                <% } %>
                 <div class="playlist-info">
                   <p class="playlist-name"><%= playlist.name %></p>
                   <p class="playlist-owner">By: <%= playlist.owner.display_name %></p>
