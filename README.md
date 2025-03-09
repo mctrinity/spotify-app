@@ -1,6 +1,6 @@
 # Spotify API Authentication and Authorization
 
-This project demonstrates how to integrate Spotify's Web API into a Node.js application using **OAuth 2.0** for authentication and authorization. This allows you to access data from the authenticated user's Spotify account, including **user playlists**, **top tracks**, and **account details**.
+This project demonstrates how to integrate Spotify's Web API into a Node.js application using **OAuth 2.0** for authentication and authorization. This allows users to access their Spotify account, including **user playlists**, **creating playlists**, and **account details**.
 
 ## Prerequisites
 
@@ -45,25 +45,51 @@ To run the application, use the following command:
 npm start
 ```
 
+or with **nodemon** for automatic reloading:
+
+```bash
+nodemon index.js
+```
+
 The app will start a server at [http://localhost:3000](http://localhost:3000).
 
-### 4. Spotify Authorization Flow
+## User Authentication & Access
 
-The app uses **OAuth 2.0** to authenticate users and gain access to their Spotify data. The flow is as follows:
+Spotify **restricts API access** in development mode. To allow more users to access the app, you have two options:
 
-1. **User Login**: When the user navigates to [http://localhost:3000/login](http://localhost:3000/login), they will be redirected to Spotify's authorization page where they can log in and authorize the app to access their data.
+### ✅ **Option 1: Add Specific Users (Developer Mode)**
 
-2. **Spotify Redirect**: Once the user grants permission, Spotify will redirect them back to the app’s callback URL (`/callback`) with an authorization code.
+If your app is in **developer mode**, only **whitelisted users** can access it. You can manually **add test users** in the **Spotify Developer Dashboard**:
 
-3. **Exchange Authorization Code for Access Token**: The app will exchange the authorization code for an **access token** by making a POST request to the Spotify Accounts API.
+#### **How to Add Users**
+1. **Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/)**  
+2. Select your app.  
+3. Click **"Users & Access"** in the left sidebar.  
+4. Click **"Add User"** and enter their **Spotify email**.  
+5. Click **"Save"** – now they can log in to your app!
 
-4. **Access Spotify API**: The access token is used to make authenticated requests to Spotify's API. The app fetches the user's **profile data**, **playlists**, and **top tracks** using the `access_token`.
+### 🌍 **Option 2: Make the App Open to Everyone**
 
-### 5. Example API Calls
+If you want **anyone** to use your app, you need to **submit it for Spotify App Review**.
 
-#### Fetch User's Playlists:
+#### **How to Submit for Review**
+1. **Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/)**  
+2. Click on your app.  
+3. Go to **"Settings"** and scroll down to **"App Status"**.  
+4. Click **"Request Verification"** (or "Submit for Review").  
+5. Fill out the form explaining:
+   - What your app does.
+   - Why you need access for all users.
+   - What **Spotify API scopes** you’re requesting.
+6. **Submit your request** and wait for approval (takes a few days).
 
-The `/v1/me/playlists` endpoint is used to fetch all playlists owned or saved by the authenticated user.
+Once approved, **any Spotify user** can log in and use your app!
+
+## Features
+
+### 1. Fetch User's Playlists
+
+The app fetches all playlists owned or saved by the authenticated user.
 
 ```javascript
 const playlistsResponse = await axios.get("https://api.spotify.com/v1/me/playlists", {
@@ -73,19 +99,32 @@ const playlistsResponse = await axios.get("https://api.spotify.com/v1/me/playlis
 });
 ```
 
-#### Fetch User's Top Tracks:
+### 2. Create a New Playlist
 
-The `/v1/me/top/tracks` endpoint is used to fetch the authenticated user's top tracks.
+Users can create new playlists using the API.
 
 ```javascript
-const topTracksResponse = await axios.get("https://api.spotify.com/v1/me/top/tracks", {
-  headers: {
-    Authorization: `Bearer ${accessToken}`,
+const response = await axios.post(
+  'https://api.spotify.com/v1/me/playlists',
+  {
+    name: "New Playlist",
+    description: "A custom playlist created via API",
+    public: true,
   },
-});
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  }
+);
 ```
 
-### 6. Gitignore
+### 3. Delete a Playlist (Coming Soon)
+
+The feature to delete a playlist via the API will be added soon.
+
+## Gitignore
 
 Here is a `.gitignore` file you can use for this project:
 
@@ -131,70 +170,10 @@ Thumbs.db
 *.sublime-project
 ```
 
-## Using **nodemon** for Automatic Server Restarts
-
-To use **nodemon** for automatically restarting your server during development, follow the steps below:
-
-### 1. Install nodemon
-
-If you haven't installed **nodemon**, you can do so globally or locally.
-
-- To install globally (so you can use nodemon in any project):
-
-```bash
-npm install -g nodemon
-```
-
-- To install **locally** (recommended for specific projects):
-
-```bash
-npm install --save-dev nodemon
-```
-
-### 2. Use nodemon to Start Your Server
-
-Once **nodemon** is installed, use the following command to start your server with automatic restarts:
-
-```bash
-npx nodemon index.js
-```
-
-Or, if you installed it globally:
-
-```bash
-nodemon index.js
-```
-
-### 3. Add a Start Script for Easy Execution
-
-You can add **nodemon** to your `package.json` to simplify running it:
-
-```json
-"scripts": {
-  "start": "nodemon index.js"
-}
-```
-
-Then, you can run the app with:
-
-```bash
-npm start
-```
-
-### 4. Customizing nodemon
-
-You can also create a `nodemon.json` file to customize **nodemon's** behavior, such as specifying which files to watch and which extensions to trigger restarts.
-
-```json
-{
-  "watch": ["index.js", "routes"],
-  "ext": "js,json"
-}
-```
-
-This will make **nodemon** watch only specific files and extensions for changes.
-
 ## Conclusion
 
 This application allows you to authenticate with Spotify, fetch user data (like playlists and top tracks), and integrate the Spotify Web API into your Node.js applications. Make sure to securely store your **Client ID** and **Client Secret** and never expose them in public repositories.
 
+If you want to **open your app to the public**, consider submitting it for **Spotify App Review**.
+
+Let us know if you need further enhancements! 🚀
